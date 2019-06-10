@@ -1,0 +1,2 @@
+# DiscordAcePerms
+A fivem script
