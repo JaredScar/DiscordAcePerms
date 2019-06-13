@@ -29,3 +29,10 @@ roleList = {
 }```
 
 The 1s should be replaced with IDs of the respective roles in your discord server. The quotes with groups should represent the groups in your permissions.cfg or server.cfg.
+
+### My other work within Fivem
+[DiscordChatRoles](https://forum.fivem.net/t/discordchatroles-release/566338)
+
+[DiscordAcePerms](https://forum.fivem.net/t/discordaceperms-release/573044)
+
+[SandyVehiclesRestrict](https://github.com/TheWolfBadger/SandyVehiclesRestrict)
