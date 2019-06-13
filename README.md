@@ -14,8 +14,17 @@ https://forum.fivem.net/t/discord-roles-for-permissions-im-creative-i-know/23380
 
 The permissions for a user update after every restart when they first login (so long as they have the discord role ID associated with the group in the list).
 
+### My other work within Fivem
+[DiscordChatRoles](https://forum.fivem.net/t/discordchatroles-release/566338)
+
+[DiscordAcePerms](https://forum.fivem.net/t/discordaceperms-release/573044)
+
+[SandyVehiclesRestrict](https://github.com/TheWolfBadger/SandyVehiclesRestrict)
+
 Example of how to set it up:
 
+
+The 1s should be replaced with IDs of the respective roles in your discord server. The quotes with groups should represent the groups in your permissions.cfg or server.cfg.
 ```lua
 roleList = {
 {1, "group.tc"}, --[[ Trusted-Civ --- ]] 
@@ -27,12 +36,3 @@ roleList = {
 {1, "group.admin"}, --[[ Management --- ]]
 {1, "group.owner"}, --[[ Owner --- ]]
 }```
-
-The 1s should be replaced with IDs of the respective roles in your discord server. The quotes with groups should represent the groups in your permissions.cfg or server.cfg.
-
-### My other work within Fivem
-[DiscordChatRoles](https://forum.fivem.net/t/discordchatroles-release/566338)
-
-[DiscordAcePerms](https://forum.fivem.net/t/discordaceperms-release/573044)
-
-[SandyVehiclesRestrict](https://github.com/TheWolfBadger/SandyVehiclesRestrict)
