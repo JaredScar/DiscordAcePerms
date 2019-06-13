@@ -14,13 +14,6 @@ https://forum.fivem.net/t/discord-roles-for-permissions-im-creative-i-know/23380
 
 The permissions for a user update after every restart when they first login (so long as they have the discord role ID associated with the group in the list).
 
-### My other work within Fivem
-[DiscordChatRoles](https://forum.fivem.net/t/discordchatroles-release/566338)
-
-[DiscordAcePerms](https://forum.fivem.net/t/discordaceperms-release/573044)
-
-[SandyVehiclesRestrict](https://github.com/TheWolfBadger/SandyVehiclesRestrict)
-
 ### How to set it up:
 
 
