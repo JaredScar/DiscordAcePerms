@@ -21,7 +21,7 @@ The permissions for a user update after every restart when they first login (so 
 
 [SandyVehiclesRestrict](https://github.com/TheWolfBadger/SandyVehiclesRestrict)
 
-Example of how to set it up:
+### How to set it up:
 
 
 The 1s should be replaced with IDs of the respective roles in your discord server. The quotes with groups should represent the groups in your permissions.cfg or server.cfg.
