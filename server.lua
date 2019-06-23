@@ -64,15 +64,19 @@ AddEventHandler('playerConnecting', function()
 	if identifierDiscord then
 		if not has_value(hasPermsAlready, GetPlayerName(src)) then
 			local roleIDs = exports.discord_perms:GetRoles(src)
-			for i = 1, #roleList do
-				for j = 1, #roleIDs do
-					if (tostring(roleList[i][1]) == tostring(roleIDs[j])) then
-						print("Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2] .. " with discordRole ID: " .. roleIDs[j])
-						ExecuteCommand(permAdd .. roleList[i][2])
+			if not (roleIDs == false) then
+				for i = 1, #roleList do
+					for j = 1, #roleIDs do
+						if (tostring(roleList[i][1]) == tostring(roleIDs[j])) then
+							print("Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2] .. " with discordRole ID: " .. roleIDs[j])
+							ExecuteCommand(permAdd .. roleList[i][2])
+						end
 					end
 				end
+				table.insert(hasPermsAlready, GetPlayerName(src))
+			else
+				print(GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
 			end
-			table.insert(hasPermsAlready, GetPlayerName(src))
 		end
 	end
 end)
