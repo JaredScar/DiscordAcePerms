@@ -1,8 +1,10 @@
 # DiscordAcePerms
+## Continued Documentation
+https://docs.badger.store/fivem-discord-scripts/discordaceperms
+## Discontinued Documentation
+### Version 1.0
 
-## Version 1.0
-
-### Installation Information:
+#### Installation Information:
 
 https://forum.fivem.net/t/discordaceperms-release/573044
 
@@ -14,7 +16,7 @@ https://forum.fivem.net/t/discord-roles-for-permissions-im-creative-i-know/23380
 
 The permissions for a user update after every restart when they first login (so long as they have the discord role ID associated with the group in the list).
 
-### How to set it up:
+#### How to set it up:
 
 
 The 1s should be replaced with IDs of the respective roles in your discord server. The quotes with groups should represent the groups in your permissions.cfg or server.cfg.
