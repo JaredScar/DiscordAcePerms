@@ -29,21 +29,6 @@ local function has_value (tab, val)
 
     return false
 end
-function PlayerIdentifier(type, id)
-    local identifiers = {}
-    local numIdentifiers = GetNumPlayerIdentifiers(id)
-
-    for a = 0, numIdentifiers do
-        table.insert(identifiers, GetPlayerIdentifier(id, a))
-    end
-
-    for b = 1, #identifiers do
-        if string.find(identifiers[b], type, 1) then
-            return identifiers[b]
-        end
-    end
-    return false
-end
 function stringsplit(inputstr, sep)
     if sep == nil then
         sep = "%s"
@@ -55,6 +40,38 @@ function stringsplit(inputstr, sep)
     end
     return t
 end
+function ExtractIdentifiers(src)
+    local identifiers = {
+        steam = "",
+        ip = "",
+        discord = "",
+        license = "",
+        xbl = "",
+        live = ""
+    }
+
+    --Loop over all identifiers
+    for i = 0, GetNumPlayerIdentifiers(src) - 1 do
+        local id = GetPlayerIdentifier(src, i)
+
+        --Convert it to a nice table.
+        if string.find(id, "steam") then
+            identifiers.steam = id
+        elseif string.find(id, "ip") then
+            identifiers.ip = id
+        elseif string.find(id, "discord") then
+            identifiers.discord = id
+        elseif string.find(id, "license") then
+            identifiers.license = id
+        elseif string.find(id, "xbl") then
+            identifiers.xbl = id
+        elseif string.find(id, "live") then
+            identifiers.live = id
+        end
+    end
+
+    return identifiers
+end
 
 hasPermsAlready = {}
 discordDetector = {}
@@ -62,16 +79,17 @@ discordDetector = {}
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
-	if not has_value(hasPermsAlready, PlayerIdentifier('discord', src)) then
-		local dis = string.sub(tostring(PlayerIdentifier("discord", src)), 7)
-		permAdd = "add_principal identifier.discord:" .. dis .. " "
+	local identifierDiscord = "";
+	local steam = ExtractIdentifiers(src).steam:gsub("steam:", "");
+	if not has_value(hasPermsAlready, steam) then
 		for k, v in ipairs(GetPlayerIdentifiers(src)) do
 				if string.sub(v, 1, string.len("discord:")) == "discord:" then
 					identifierDiscord = v
 				end
 		end
+		local permAdd = "add_principal identifier.steam:" .. steam .. " "
 		if identifierDiscord then
-			if not has_value(hasPermsAlready, PlayerIdentifier('steam', src)) then
+			if not has_value(hasPermsAlready, steam) then
 				local roleIDs = exports.discord_perms:GetRoles(src)
 				if not (roleIDs == false) then
 					for i = 1, #roleList do
@@ -82,17 +100,17 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 							end
 						end
 					end
-					table.insert(hasPermsAlready, PlayerIdentifier('discord', src))
+					table.insert(hasPermsAlready, steam)
 				else
 					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
 				end
 			end
 		else 
-			if not has_value(discordDetector, PlayerIdentifier('discord', src)) then 
+			if not has_value(discordDetector, steam) then 
 				-- Kick with we couldn't find their discord, try to restart it whilst fivem is closed 
 				deferrals.done('[DiscordAcePerms] DISCORD NOT FOUND... Try restarting Discord application whilst FiveM is closed! ' ..
 					'This notice will not be displayed to you upon next connect.')
-				table.insert(discordDetector, PlayerIdentifier('discord', src));
+				table.insert(discordDetector, steam);
 				print('[DiscordAcePerms] Discord was not found for player ' .. GetPlayerName(src) .. "...")
 				CancelEvent();
 				return;
@@ -107,15 +125,16 @@ end)
 RegisterServerEvent("DiscordAcePerms:GivePerms")
 AddEventHandler("DiscordAcePerms:GivePerms", function()
 	local src = source
+	local identifierDiscord = "";
 	if not has_value(hasPermsAlready, PlayerIdentifier('discord', src)) then
-		local dis = string.sub(tostring(PlayerIdentifier("discord", src)), 7)
-		permAdd = "add_principal identifier.discord:" .. dis .. " "
 		for k, v in ipairs(GetPlayerIdentifiers(src)) do
 				if string.sub(v, 1, string.len("discord:")) == "discord:" then
 					identifierDiscord = v
 				end
 		end
+		local dis = identifierDiscord;
 		if identifierDiscord then
+			permAdd = "add_principal identifier.discord:" .. identifierDiscord .. " "
 			if not has_value(hasPermsAlready, PlayerIdentifier('discord', src)) then
 				local roleIDs = exports.discord_perms:GetRoles(src)
 				if not (roleIDs == false) then
