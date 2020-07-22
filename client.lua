@@ -3,8 +3,8 @@
 -----------------------------------
 
 --- Code ---
-
-AddEventHandler('playerSpawned', function()
-    local src = source
-    TriggerServerEvent("DiscordAcePerms:GivePerms", src)
+--[[
+Citizen.CreateThread(function()
+	TriggerServerEvent("DiscordAcePerms:GivePerms");
 end)
+]]-- 
