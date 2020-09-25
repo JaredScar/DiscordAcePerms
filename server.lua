@@ -79,7 +79,7 @@ discordDetector = {}
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
-	local identifierDiscord = "";
+	local identifierDiscord = false;
 	local steam = ExtractIdentifiers(src).steam:gsub("steam:", "");
 	if not has_value(hasPermsAlready, steam) then
 		for k, v in ipairs(GetPlayerIdentifiers(src)) do
