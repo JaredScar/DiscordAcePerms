@@ -56,7 +56,7 @@ function ExtractIdentifiers(src)
     return identifiers
 end
 
-discordDetector = {}
+DiscordDetector = {}
 
 PermTracker = {}
 
@@ -64,31 +64,34 @@ roleList = Config.roleList;
 
 AddEventHandler('playerDropped', function (reason) 
 	local src = source;
-	local steam = ExtractIdentifiers(src).steam:gsub("steam:", "");
-	if PermTracker[steam] ~= nil then 
+	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
+	local license = ExtractIdentifiers(src).license;
+	if PermTracker[discord] ~= nil then 
 		-- They have perms that need to be removed:
-		local list = PermTracker[steam];
+		local list = PermTracker[discord];
 		for i = 1, #list do 
 			local permGroup = list[i];
-			ExecuteCommand('remove_principal identifier.steam:' .. steam .. " " .. permGroup);
+			ExecuteCommand('remove_principal identifier.discord:' .. discord .. " " .. permGroup);
 			print("[DiscordAcePerms] (playerDropped) Removed " 
 				.. GetPlayerName(src) .. " from role group " .. permGroup)
 		end
-		PermTracker[src] = nil;
+		PermTracker[discord] = nil;
 	end
+	DiscordDetector[license] = nil;
 end)
 
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
 	local identifierDiscord = "";
-	local steam = ExtractIdentifiers(src).steam:gsub("steam:", "");
+	local license = ExtractIdentifiers(src).license;
+	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
 		for k, v in ipairs(GetPlayerIdentifiers(src)) do
 				if string.sub(v, 1, string.len("discord:")) == "discord:" then
 					identifierDiscord = v
 				end
 		end
-		local permAdd = "add_principal identifier.steam:" .. steam .. " "
+		local permAdd = "add_principal identifier.discord:" .. discord .. " "
 		if identifierDiscord then
 				local roleIDs = exports.discord_perms:GetRoles(src)
 				if not (roleIDs == false) then
@@ -98,16 +101,16 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 								print("[DiscordAcePerms] (playerConnecting) Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
 								ExecuteCommand(permAdd .. roleList[i][2])
 								-- Track the permission node given: 
-								if PermTracker[steam] ~= nil then 
+								if PermTracker[discord] ~= nil then 
 									-- Has them, we add to list 
-									local list = PermTracker[steam];
+									local list = PermTracker[discord];
 									table.insert(list, roleList[i][2]);
-									PermTracker[steam] = list;
+									PermTracker[discord] = list;
 								else 
 									-- Doesn't have them, give them a list 
 									local list = {};
 									table.insert(list, roleList[i][2]);
-									PermTracker[steam] = list;
+									PermTracker[discord] = list;
 								end
 							end
 						end
@@ -116,9 +119,9 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
 				end
 		else 
-			if not has_value(discordDetector, steam) then 
+			if DiscordDetector[license] ~= nil then 
 				-- Kick with we couldn't find their discord, try to restart it whilst fivem is closed 
-				table.insert(discordDetector, steam);
+				DiscordDetector[license] = true;
 				deferrals.done('[DiscordAcePerms] DISCORD NOT FOUND... Try restarting Discord application whilst FiveM is closed! ' ..
 					'This notice will not be displayed to you upon next connect.')
 				print('[DiscordAcePerms] Discord was not found for player ' .. GetPlayerName(src) .. "...")
