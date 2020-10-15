@@ -3,23 +3,6 @@
 -----------------------------------
 
 --- Code ---
-
-roleList = {
-{1, "group.tc"}, -- Trusted Civ
-{1, "group.ems"}, -- EMS
-{1, "group.discord"}, -- DISCORD MEMBER
-{1, "group.co"}, -- Community Cop
-{1, "group.nitro"}, -- Nitro Booster
-{1, "group.faaheli"}, --[[ FAA heli --- ]]
-{1, "group.faacommercial"}, --[[ FAA planes--- ]]
-{1, "group.donatormenu2"}, --[[ Donator Menu 2--- ]]
-{1, "group.donatormenu1"}, --[[ Donator Menu 1--- ]]
-{1, "group.trialmoderator"}, --[[ T-Mod --- ]] 
-{1, "group.moderator"}, --[[ Moderator --- ]]
-{1, "group.admin"}, --[[ Admin --- ]]
-{1, "group.management"}, --[[ Management --- ]]
-{1, "group.owner"}, --[[ Owner --- ]]
-}
 local function has_value (tab, val)
     for index, value in ipairs(tab) do
         if value == val then
@@ -73,15 +56,33 @@ function ExtractIdentifiers(src)
     return identifiers
 end
 
-hasPermsAlready = {}
 discordDetector = {}
+
+PermTracker = {}
+
+roleList = Config.roleList;
+
+AddEventHandler('playerDropped', function (reason) 
+	local src = source;
+	local steam = ExtractIdentifiers(src).steam:gsub("steam:", "");
+	if PermTracker[steam] ~= nil then 
+		-- They have perms that need to be removed:
+		local list = PermTracker[steam];
+		for i = 1, #list do 
+			local permGroup = list[i];
+			ExecuteCommand('remove_principal identifier.steam:' .. steam .. " " .. permGroup);
+			print("[DiscordAcePerms] (playerDropped) Removed " 
+				.. GetPlayerName(src) .. " from role group " .. permGroup)
+		end
+		PermTracker[src] = nil;
+	end
+end)
 
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
-	local identifierDiscord = false;
+	local identifierDiscord = "";
 	local steam = ExtractIdentifiers(src).steam:gsub("steam:", "");
-	if not has_value(hasPermsAlready, steam) then
 		for k, v in ipairs(GetPlayerIdentifiers(src)) do
 				if string.sub(v, 1, string.len("discord:")) == "discord:" then
 					identifierDiscord = v
@@ -89,69 +90,41 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 		end
 		local permAdd = "add_principal identifier.steam:" .. steam .. " "
 		if identifierDiscord then
-			if not has_value(hasPermsAlready, steam) then
 				local roleIDs = exports.discord_perms:GetRoles(src)
 				if not (roleIDs == false) then
 					for i = 1, #roleList do
 						for j = 1, #roleIDs do
 							if (tostring(roleList[i][1]) == tostring(roleIDs[j])) then
-								print("[DiscordAcePerms] Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2] .. " with discordRole ID: " .. roleIDs[j])
+								print("[DiscordAcePerms] (playerConnecting) Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
 								ExecuteCommand(permAdd .. roleList[i][2])
+								-- Track the permission node given: 
+								if PermTracker[steam] ~= nil then 
+									-- Has them, we add to list 
+									local list = PermTracker[steam];
+									table.insert(list, roleList[i][2]);
+									PermTracker[steam] = list;
+								else 
+									-- Doesn't have them, give them a list 
+									local list = {};
+									table.insert(list, roleList[i][2]);
+									PermTracker[steam] = list;
+								end
 							end
 						end
 					end
-					table.insert(hasPermsAlready, steam)
 				else
 					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
 				end
-			end
 		else 
 			if not has_value(discordDetector, steam) then 
 				-- Kick with we couldn't find their discord, try to restart it whilst fivem is closed 
+				table.insert(discordDetector, steam);
 				deferrals.done('[DiscordAcePerms] DISCORD NOT FOUND... Try restarting Discord application whilst FiveM is closed! ' ..
 					'This notice will not be displayed to you upon next connect.')
-				table.insert(discordDetector, steam);
 				print('[DiscordAcePerms] Discord was not found for player ' .. GetPlayerName(src) .. "...")
 				CancelEvent();
 				return;
 			end
 		end
-	end
 	deferrals.done();
 end)
-
-
--- @Deprecated 
-RegisterServerEvent("DiscordAcePerms:GivePerms")
-AddEventHandler("DiscordAcePerms:GivePerms", function()
-	local src = source
-	local identifierDiscord = "";
-	if not has_value(hasPermsAlready, PlayerIdentifier('discord', src)) then
-		for k, v in ipairs(GetPlayerIdentifiers(src)) do
-				if string.sub(v, 1, string.len("discord:")) == "discord:" then
-					identifierDiscord = v
-				end
-		end
-		local dis = identifierDiscord;
-		if identifierDiscord then
-			permAdd = "add_principal identifier.discord:" .. identifierDiscord .. " "
-			if not has_value(hasPermsAlready, PlayerIdentifier('discord', src)) then
-				local roleIDs = exports.discord_perms:GetRoles(src)
-				if not (roleIDs == false) then
-					for i = 1, #roleList do
-						for j = 1, #roleIDs do
-							if (tostring(roleList[i][1]) == tostring(roleIDs[j])) then
-								print("[DiscordAcePerms] Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2] .. " with discordRole ID: " .. roleIDs[j])
-								ExecuteCommand(permAdd .. roleList[i][2])
-							end
-						end
-					end
-					table.insert(hasPermsAlready, PlayerIdentifier('discord', src))
-				else
-					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
-				end
-			end
-		end
-	end
-end)
-			
