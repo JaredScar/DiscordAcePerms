@@ -93,11 +93,11 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 		end
 		local permAdd = "add_principal identifier.discord:" .. discord .. " "
 		if identifierDiscord then
-				local roleIDs = exports.discord_perms:GetRoles(src)
+				local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
 				if not (roleIDs == false) then
 					for i = 1, #roleList do
 						for j = 1, #roleIDs do
-							if (tostring(roleList[i][1]) == tostring(roleIDs[j])) then
+							if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
 								print("[DiscordAcePerms] (playerConnecting) Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
 								ExecuteCommand(permAdd .. roleList[i][2])
 								-- Track the permission node given: 
