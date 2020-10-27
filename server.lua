@@ -80,7 +80,6 @@ AddEventHandler('playerDropped', function (reason)
 		PermTracker[discord] = nil;
 	end
 	DiscordDetector[license] = nil;
-	InDiscordDetector[license] = nil;
 end)
 debugScript = 0;
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
