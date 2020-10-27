@@ -58,6 +58,8 @@ end
 
 DiscordDetector = {}
 
+InDiscordDetector = {}
+
 PermTracker = {}
 
 roleList = Config.roleList;
@@ -78,8 +80,9 @@ AddEventHandler('playerDropped', function (reason)
 		PermTracker[discord] = nil;
 	end
 	DiscordDetector[license] = nil;
+	InDiscordDetector[license] = nil;
 end)
-
+debugScript = 0;
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
@@ -93,8 +96,17 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 		end
 		local permAdd = "add_principal identifier.discord:" .. discord .. " "
 		if identifierDiscord then
+				if debugScript then 
+					print("Gets past identifierDiscord statement");
+				end
 				local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
+				if debugScript then 
+					print("Value of roleIDs == " .. tostring(roleIDs));
+				end
 				if not (roleIDs == false) then
+					if debugScript then 
+						print("Gets past (not [roleIDs == false]) statement");
+					end
 					for i = 1, #roleList do
 						for j = 1, #roleIDs do
 							if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
@@ -115,17 +127,25 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 							end
 						end
 					end
+					print("[DiscordAcePerms] (playerConnecting) Player " .. GetPlayerName(src) .. " has been granted their permissions...");
 				else
-					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
+					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...")
+					if InDiscordDetector[license] == nil then 
+						-- Notify them they are not in the Discord 
+						InDiscordDetector[license] = true;
+						deferrals.done('[DiscordAcePerms] You were not detected to be in our Discord server...' .. 
+							' Either that or we could not find your roles ' ..
+							'at this time. Please relog.');
+						return;
+					end
 				end
 		else 
-			if DiscordDetector[license] ~= nil then 
+			if DiscordDetector[license] == nil then 
 				-- Kick with we couldn't find their discord, try to restart it whilst fivem is closed 
 				DiscordDetector[license] = true;
+				print('[DiscordAcePerms] Discord was not found for player ' .. GetPlayerName(src) .. "...")
 				deferrals.done('[DiscordAcePerms] DISCORD NOT FOUND... Try restarting Discord application whilst FiveM is closed! ' ..
 					'This notice will not be displayed to you upon next connect.')
-				print('[DiscordAcePerms] Discord was not found for player ' .. GetPlayerName(src) .. "...")
-				CancelEvent();
 				return;
 			end
 		end
