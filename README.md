@@ -1,4 +1,8 @@
 # DiscordAcePerms
+
+## Visitor Count
+  <img src="https://profile-counter.glitch.me/Badger_DiscordAcePerms/count.svg" />
+
 ## Continued Documentation
 https://docs.badger.store/fivem-discord-scripts/discordaceperms
 
