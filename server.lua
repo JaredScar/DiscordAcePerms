@@ -3,15 +3,57 @@
 -----------------------------------
 
 --- Code ---
-
-function GetIdentifier(source, id_type)
-    if type(id_type) ~= "string" then return print('Invalid usage') end
-    for _, identifier in pairs(GetPlayerIdentifiers(source)) do
-        if string.find(identifier, id_type) then
-            return identifier
+local function has_value (tab, val)
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
         end
     end
-    return nil
+
+    return false
+end
+function stringsplit(inputstr, sep)
+    if sep == nil then
+        sep = "%s"
+    end
+    local t={} ; i=1
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+        t[i] = str
+        i = i + 1
+    end
+    return t
+end
+function ExtractIdentifiers(src)
+    local identifiers = {
+        steam = "",
+        ip = "",
+        discord = "",
+        license = "",
+        xbl = "",
+        live = ""
+    }
+
+    --Loop over all identifiers
+    for i = 0, GetNumPlayerIdentifiers(src) - 1 do
+        local id = GetPlayerIdentifier(src, i)
+
+        --Convert it to a nice table.
+        if string.find(id, "steam") then
+            identifiers.steam = id
+        elseif string.find(id, "ip") then
+            identifiers.ip = id
+        elseif string.find(id, "discord") then
+            identifiers.discord = id
+        elseif string.find(id, "license") then
+            identifiers.license = id
+        elseif string.find(id, "xbl") then
+            identifiers.xbl = id
+        elseif string.find(id, "live") then
+            identifiers.live = id
+        end
+    end
+
+    return identifiers
 end
 
 DiscordDetector = {}
@@ -24,8 +66,8 @@ roleList = Config.roleList;
 
 AddEventHandler('playerDropped', function (reason) 
 	local src = source;
-	local discord = GetIdentifier(src, 'discord'):gsub("discord:", "");
-	local license = GetIdentifier(src, 'license');
+	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
+	local license = ExtractIdentifiers(src).license;
 	if PermTracker[discord] ~= nil then 
 		-- They have perms that need to be removed:
 		local list = PermTracker[discord];
@@ -45,8 +87,8 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
 	local identifierDiscord = "";
-	local license = GetIdentifier(src, 'license');
-	local discord = GetIdentifier(src, 'discord'):gsub("discord:", "");
+	local license = ExtractIdentifiers(src).license;
+	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
 		for k, v in ipairs(GetPlayerIdentifiers(src)) do
 				if string.sub(v, 1, string.len("discord:")) == "discord:" then
 					identifierDiscord = v
