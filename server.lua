@@ -129,7 +129,7 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 					end
 					print("[DiscordAcePerms] (playerConnecting) Player " .. GetPlayerName(src) .. " has been granted their permissions...");
 				else
-					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...")
+					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...");
 					if InDiscordDetector[license] == nil then 
 						-- Notify them they are not in the Discord 
 						InDiscordDetector[license] = true;
