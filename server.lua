@@ -185,7 +185,7 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 					identifierDiscord = v
 				end
 		end
-		local permAdd = "add_principal identifier.discord:" .. discord .. " "
+		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
 		if identifierDiscord then
 			if (not RegisterPermissions(src, 'playerConnecting')) then
 				if InDiscordDetector[license] == nil then 
