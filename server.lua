@@ -148,7 +148,9 @@ function RegisterPermissions(src, eventLocation)
 			for i = 1, #roleList do
 				for j = 1, #roleIDs do
 					if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
-						print("[DiscordAcePerms] (playerConnecting) Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
+						if (debugScript) then 
+							print("[DiscordAcePerms] (" .. eventLocation .. ") Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
+						end
 						ExecuteCommand(permAdd .. roleList[i][2])
 						-- Track the permission node given: 
 						if PermTracker[discord] ~= nil then 
@@ -165,10 +167,14 @@ function RegisterPermissions(src, eventLocation)
 					end
 				end
 			end
-			print("[DiscordAcePerms] (" .. eventLocation .. ") Player " .. GetPlayerName(src) .. " has been granted their permissions...");
+			if (debugScript) then 
+				print("[DiscordAcePerms] (" .. eventLocation .. ") Player " .. GetPlayerName(src) .. " has been granted their permissions...");
+			end 
 			return true;
 		else
-			print("[DiscordAcePerms] (" .. eventLocation .. ")" .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...");
+			if (debugScript) then 
+				print("[DiscordAcePerms] (" .. eventLocation .. ")" .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...");
+			end
 			return false;
 		end
 	end
