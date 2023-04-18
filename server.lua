@@ -122,7 +122,6 @@ if (Config.Allow_Refresh_Command) then
 end 
 
 function RegisterPermissions(src, eventLocation)
-	local src = source; 
 	local identifierDiscord = "";
 	local license = ExtractIdentifiers(src).license;
 	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
