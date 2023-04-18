@@ -83,6 +83,95 @@ AddEventHandler('playerDropped', function (reason)
 end)
 debugScript = false;
 
+permThrottle = {};
+
+Citizen.CreateThread(function()
+	for discord, count in pairs(permThrottle) do 
+		permThrottle[discord] = (permThrottle[discord] - 1);
+		if (permThrottle[discord] <= 0) then 
+			permThrottle[discord] = nil;
+		end
+	end
+	Wait(1000);
+end)
+
+prefix = '^9[^6DiscordAcePerms^9] ^3'
+function sendMsg(src, msg) 
+	TriggerClientEvent('chatMessage', src, prefix .. msg);
+end
+
+RegisterCommand('refreshPerms', function(src, args, rawCommand)
+	local discordIdentifier = ExtractIdentifiers(src).discord;
+	if (discordIdentifier ~= nil) then 
+		local discord = discordIdentifier:gsub("discord:", "");
+		if (permThrottle[discord] == nil) then 
+			permThrottle[discord] = Config.Refresh_Throttle;
+			RegisterPermissions(src, 'refreshPerms');
+			sendMsg(src, "Your permissions have been refreshed ^2successfully^3...");
+		else 
+			local currentThrottle = permThrottle[discord];
+			sendMsg(src, "^1ERR: You cannot refresh your permissions since you are on a cooldown. You can refresh in ^3" .. currentThrottle .. " ^1seconds...");
+		end
+	else 
+		sendMsg(src, "^1ERR: Your discord identifier was not found...");
+	end
+end)
+
+function RegisterPermissions(src, eventLocation)
+	exports['Badger_Discord_API']:ClearCache(discordId);
+	local src = source; 
+	local identifierDiscord = "";
+	local license = ExtractIdentifiers(src).license;
+	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
+	for k, v in ipairs(GetPlayerIdentifiers(src)) do
+		if string.sub(v, 1, string.len("discord:")) == "discord:" then
+			identifierDiscord = v
+		end
+	end
+	if (identifierDiscord) then
+		PermTracker[discord] = nil;
+		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
+		if debugScript then 
+			print("Gets past identifierDiscord statement");
+		end
+		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
+		if debugScript then 
+			print("Value of roleIDs == " .. tostring(roleIDs));
+		end
+		if not (roleIDs == false) then
+			if debugScript then 
+				print("Gets past (not [roleIDs == false]) statement");
+			end
+			for i = 1, #roleList do
+				for j = 1, #roleIDs do
+					if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
+						print("[DiscordAcePerms] (playerConnecting) Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
+						ExecuteCommand(permAdd .. roleList[i][2])
+						-- Track the permission node given: 
+						if PermTracker[discord] ~= nil then 
+							-- Has them, we add to list 
+							local list = PermTracker[discord];
+							table.insert(list, roleList[i][2]);
+							PermTracker[discord] = list;
+						else 
+							-- Doesn't have them, give them a list 
+							local list = {};
+							table.insert(list, roleList[i][2]);
+							PermTracker[discord] = list;
+						end
+					end
+				end
+			end
+			print("[DiscordAcePerms] (" .. eventLocation .. ") Player " .. GetPlayerName(src) .. " has been granted their permissions...");
+			return true;
+		else
+			print("[DiscordAcePerms] (" .. eventLocation .. ")" .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...");
+			return false;
+		end
+	end
+	return false;
+end
+
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
 	local src = source; 
@@ -96,57 +185,24 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 		end
 		local permAdd = "add_principal identifier.discord:" .. discord .. " "
 		if identifierDiscord then
-				if debugScript then 
-					print("Gets past identifierDiscord statement");
-				end
-				local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
-				if debugScript then 
-					print("Value of roleIDs == " .. tostring(roleIDs));
-				end
-				if not (roleIDs == false) then
-					if debugScript then 
-						print("Gets past (not [roleIDs == false]) statement");
-					end
-					for i = 1, #roleList do
-						for j = 1, #roleIDs do
-							if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
-								print("[DiscordAcePerms] (playerConnecting) Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
-								ExecuteCommand(permAdd .. roleList[i][2])
-								-- Track the permission node given: 
-								if PermTracker[discord] ~= nil then 
-									-- Has them, we add to list 
-									local list = PermTracker[discord];
-									table.insert(list, roleList[i][2]);
-									PermTracker[discord] = list;
-								else 
-									-- Doesn't have them, give them a list 
-									local list = {};
-									table.insert(list, roleList[i][2]);
-									PermTracker[discord] = list;
-								end
+			if (not RegisterPermissions(src, 'playerConnecting')) then
+				if InDiscordDetector[license] == nil then 
+					-- Notify them they are not in the Discord 
+					InDiscordDetector[license] = true;
+					local clicked = false;
+					while not clicked do 
+						deferrals.presentCard(card,
+						function(data, rawData)
+							if (data.submitId == 'played') then 
+								clicked = true;
+								deferrals.done()
 							end
-						end
+						end)
+						Citizen.Wait((1000 * 13));
 					end
-					print("[DiscordAcePerms] (playerConnecting) Player " .. GetPlayerName(src) .. " has been granted their permissions...");
-				else
-					print("[DiscordAcePerms] " .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...")
-					if InDiscordDetector[license] == nil then 
-						-- Notify them they are not in the Discord 
-						InDiscordDetector[license] = true;
-						local clicked = false;
-						while not clicked do 
-							deferrals.presentCard(card,
-							function(data, rawData)
-								if (data.submitId == 'played') then 
-									clicked = true;
-									deferrals.done()
-								end
-							end)
-							Citizen.Wait((1000 * 13));
-						end
-						return;
-					end
+					return;
 				end
+			end
 		else 
 			if DiscordDetector[license] == nil then 
 				-- Kick with we couldn't find their discord, try to restart it whilst fivem is closed 
