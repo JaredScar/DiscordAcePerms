@@ -100,22 +100,24 @@ function sendMsg(src, msg)
 	TriggerClientEvent('chatMessage', src, prefix .. msg);
 end
 
-RegisterCommand('refreshPerms', function(src, args, rawCommand)
-	local discordIdentifier = ExtractIdentifiers(src).discord;
-	if (discordIdentifier ~= nil) then 
-		local discord = discordIdentifier:gsub("discord:", "");
-		if (permThrottle[discord] == nil) then 
-			permThrottle[discord] = Config.Refresh_Throttle;
-			RegisterPermissions(src, 'refreshPerms');
-			sendMsg(src, "Your permissions have been refreshed ^2successfully^3...");
+if (Config.Allow_Refresh_Command) then 
+	RegisterCommand('refreshPerms', function(src, args, rawCommand)
+		local discordIdentifier = ExtractIdentifiers(src).discord;
+		if (discordIdentifier ~= nil) then 
+			local discord = discordIdentifier:gsub("discord:", "");
+			if (permThrottle[discord] == nil) then 
+				permThrottle[discord] = Config.Refresh_Throttle;
+				RegisterPermissions(src, 'refreshPerms');
+				sendMsg(src, "Your permissions have been refreshed ^2successfully^3...");
+			else 
+				local currentThrottle = permThrottle[discord];
+				sendMsg(src, "^1ERR: You cannot refresh your permissions since you are on a cooldown. You can refresh in ^3" .. currentThrottle .. " ^1seconds...");
+			end
 		else 
-			local currentThrottle = permThrottle[discord];
-			sendMsg(src, "^1ERR: You cannot refresh your permissions since you are on a cooldown. You can refresh in ^3" .. currentThrottle .. " ^1seconds...");
+			sendMsg(src, "^1ERR: Your discord identifier was not found...");
 		end
-	else 
-		sendMsg(src, "^1ERR: Your discord identifier was not found...");
-	end
-end)
+	end)
+end 
 
 function RegisterPermissions(src, eventLocation)
 	exports['Badger_Discord_API']:ClearCache(discordId);
