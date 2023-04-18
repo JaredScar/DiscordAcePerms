@@ -86,16 +86,18 @@ debugScript = false;
 permThrottle = {};
 
 Citizen.CreateThread(function()
-	for discord, count in pairs(permThrottle) do 
-		permThrottle[discord] = (permThrottle[discord] - 1);
-		if (permThrottle[discord] <= 0) then 
-			permThrottle[discord] = nil;
+	while true do 
+		for discord, count in pairs(permThrottle) do 
+			permThrottle[discord] = (permThrottle[discord] - 1);
+			if (permThrottle[discord] <= 0) then 
+				permThrottle[discord] = nil;
+			end
 		end
+		Wait(1000);
 	end
-	Wait(1000);
 end)
 
-prefix = '^9[^6DiscordAcePerms^9] ^3'
+prefix = '^9[^5DiscordAcePerms^9] ^3'
 function sendMsg(src, msg) 
 	TriggerClientEvent('chatMessage', src, prefix .. msg);
 end
@@ -107,8 +109,8 @@ if (Config.Allow_Refresh_Command) then
 			local discord = discordIdentifier:gsub("discord:", "");
 			if (permThrottle[discord] == nil) then 
 				permThrottle[discord] = Config.Refresh_Throttle;
-				RegisterPermissions(src, 'refreshPerms');
 				sendMsg(src, "Your permissions have been refreshed ^2successfully^3...");
+				RegisterPermissions(src, 'refreshPerms');
 			else 
 				local currentThrottle = permThrottle[discord];
 				sendMsg(src, "^1ERR: You cannot refresh your permissions since you are on a cooldown. You can refresh in ^3" .. currentThrottle .. " ^1seconds...");
@@ -120,7 +122,6 @@ if (Config.Allow_Refresh_Command) then
 end 
 
 function RegisterPermissions(src, eventLocation)
-	exports['Badger_Discord_API']:ClearCache(discordId);
 	local src = source; 
 	local identifierDiscord = "";
 	local license = ExtractIdentifiers(src).license;
@@ -131,6 +132,7 @@ function RegisterPermissions(src, eventLocation)
 		end
 	end
 	if (identifierDiscord) then
+		exports['Badger_Discord_API']:ClearCache(discordId);
 		PermTracker[discord] = nil;
 		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
 		if debugScript then 
