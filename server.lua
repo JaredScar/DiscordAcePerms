@@ -111,6 +111,7 @@ if (Config.Allow_Refresh_Command) then
 				permThrottle[discord] = Config.Refresh_Throttle;
 				sendMsg(src, "Your permissions have been refreshed ^2successfully^3...");
 				RegisterPermissions(src, 'refreshPerms');
+				TriggerEvent('vMenu:RequestPermissions');
 			else 
 				local currentThrottle = permThrottle[discord];
 				sendMsg(src, "^1ERR: You cannot refresh your permissions since you are on a cooldown. You can refresh in ^3" .. currentThrottle .. " ^1seconds...");
@@ -211,6 +212,8 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 					end
 					return;
 				end
+			else
+				TriggerEvent('vMenu:RequestPermissions'); 
 			end
 		else 
 			if DiscordDetector[license] == nil then 
