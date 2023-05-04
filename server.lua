@@ -74,14 +74,16 @@ AddEventHandler('playerDropped', function (reason)
 		for i = 1, #list do 
 			local permGroup = list[i];
 			ExecuteCommand('remove_principal identifier.discord:' .. discord .. " " .. permGroup);
-			print("[DiscordAcePerms] (playerDropped) Removed " 
-				.. GetPlayerName(src) .. " from role group " .. permGroup)
+			if (Config.Print_Perm_Grants_And_Removals) then
+				print("[DiscordAcePerms] (playerDropped) Removed " 
+					.. GetPlayerName(src) .. " from role group " .. permGroup)
+			end
 		end
 		PermTracker[discord] = nil;
 	end
 	DiscordDetector[license] = nil;
 end)
-debugScript = false;
+debugScript = Config.DebugScript;
 
 permThrottle = {};
 
@@ -122,6 +124,12 @@ if (Config.Allow_Refresh_Command) then
 	end)
 end 
 
+function sendDbug(msg, eventLocation)
+	if (debugScript) then 
+		print("[DiscordAcePerms DEBUG] (" .. eventLocation .. ") " .. msg);
+	end 
+end
+
 function RegisterPermissions(src, eventLocation)
 	local identifierDiscord = "";
 	local license = ExtractIdentifiers(src).license;
@@ -132,24 +140,18 @@ function RegisterPermissions(src, eventLocation)
 		end
 	end
 	if (identifierDiscord) then
+		sendDbug("Player " .. GetPlayerName(src) .. " had their Discord identifier found...", eventLocation);
 		exports['Badger_Discord_API']:ClearCache(discordId);
 		PermTracker[discord] = nil;
 		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
-		if debugScript then 
-			print("Gets past identifierDiscord statement");
-		end
 		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
-		if debugScript then 
-			print("Value of roleIDs == " .. tostring(roleIDs));
-		end
 		if not (roleIDs == false) then
-			if debugScript then 
-				print("Gets past (not [roleIDs == false]) statement");
-			end
+			sendDbug("Player " .. GetPlayerName(src) .. " had a valid roleIDs... Length: " .. tostring(#roleIDs), eventLocation);
 			for i = 1, #roleList do
 				for j = 1, #roleIDs do
+					sendDbug("Checking to add permission: " .. roleList[i][2] .. " => Player " .. GetPlayerName(src) .. " has role " .. roleIDs[j] .. " and it was compared against " .. roleList[i][1], eventLocation);
 					if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
-						if (debugScript) then 
+						if (Config.Print_Perm_Grants_And_Removals) then 
 							print("[DiscordAcePerms] (" .. eventLocation .. ") Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
 						end
 						ExecuteCommand(permAdd .. roleList[i][2])
@@ -169,12 +171,12 @@ function RegisterPermissions(src, eventLocation)
 				end
 			end
 			if (debugScript) then 
-				print("[DiscordAcePerms] (" .. eventLocation .. ") Player " .. GetPlayerName(src) .. " has been granted their permissions...");
+				print("[DiscordAcePerms DEBUG] (" .. eventLocation .. ") Player " .. GetPlayerName(src) .. " has been granted their permissions...");
 			end 
 			return true;
 		else
 			if (debugScript) then 
-				print("[DiscordAcePerms] (" .. eventLocation .. ")" .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...");
+				print("[DiscordAcePerms DEBUG] (" .. eventLocation .. ")" .. GetPlayerName(src) .. " has not gotten permissions because we could not find their roles...");
 			end
 			return false;
 		end
@@ -236,10 +238,8 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 		end
 	deferrals.done();
 end)
---card = '{"type":"AdaptiveCard","$schema":"http://adaptivecards.io/schemas/adaptive-card.json","version":"1.2","body":[{"type":"Container","items":[{"type":"TextBlock","text":"Welcome to ' .. Config.Server_Name .. '","wrap":true,"fontType":"Default","size":"ExtraLarge","weight":"Bolder","color":"Light"},{"type":"TextBlock","text":"You were not detected in our Discord!","wrap":true,"size":"Large","weight":"Bolder","color":"Light"},{"type":"TextBlock","text":"Please join below, then press play! Have fun!","wrap":true,"color":"Light","size":"Medium"},{"type":"ColumnSet","height":"stretch","minHeight":"100px","bleed":true,"horizontalAlignment":"Center","columns":[{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"Discord","iconUrl":"","url":"' .. Config.Discord_Link .. '","style":"positive"}]}]},{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.Submit","title":"Play","style":"positive","iconUrl":"","id":"played"}]}]},{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"Website","style":"positive","url":"' .. Config.Website_Link .. '","iconUrl":""}]}]}]},{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"DiscordAcePerms created by Badger","style":"destructive","iconUrl":"https://i.gyazo.com/c629f37bb1aeed2c1bc1768fdc93bc1a.gif","url":"https://discord.com/invite/WjB5VFz"}]}],"style":"default","bleed":true,"height":"stretch","isVisible":true}]}'
+
 -- IMPORTANT
 -- 		BEFORE EDITING:
 --			 Do not take out my credit... Out of respect for my resources, do not remove my credit. Thank you.
 card = '{"type":"AdaptiveCard","$schema":"http://adaptivecards.io/schemas/adaptive-card.json","version":"1.2","body":[{"type":"Container","items":[{"type":"TextBlock","text":"Welcome to ' .. Config.Server_Name .. '","wrap":true,"fontType":"Default","size":"ExtraLarge","weight":"Bolder","color":"Light"},{"type":"TextBlock","text":"You were not detected in our Discord!","wrap":true,"size":"Large","weight":"Bolder","color":"Light"},{"type":"TextBlock","text":"Please join below, then press play! Have fun!","wrap":true,"color":"Light","size":"Medium"},{"type":"ColumnSet","height":"stretch","minHeight":"100px","bleed":true,"horizontalAlignment":"Center","selectAction":{"type":"Action.OpenUrl"},"columns":[{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"Discord","url":"' .. Config.Discord_Link .. '","style":"positive"}]}]},{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.Submit","title":"Play","style":"positive", "id":"played"}]}]},{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"Website","style":"positive","url":"' .. Config.Website_Link .. '"}]}]}]},{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"DiscordAcePerms created by Badger","style":"destructive","iconUrl":"https://i.gyazo.com/c629f37bb1aeed2c1bc1768fdc93bc1a.gif","url":"https://discord.com/invite/WjB5VFz"}]}],"style":"default","bleed":true,"height":"stretch","isVisible":true}]}'
---card = json.encode(card) 
---card = [==[{"type":"AdaptiveCard","$schema":"http://adaptivecards.io/schemas/adaptive-card.json","version":"1.2","body":[{"type":"Container","items":[{"type":"TextBlock","text":"Welcome to [SERVER_NAME]","wrap":true,"fontType":"Default","size":"ExtraLarge","weight":"Bolder","color":"Light"},{"type":"TextBlock","text":"You were not detected in our Discord!","wrap":true,"size":"Large","weight":"Bolder","color":"Light"},{"type":"TextBlock","text":"Please join below, then press play! Have fun!","wrap":true,"color":"Light","size":"Medium"},{"type":"ColumnSet","height":"stretch","minHeight":"100px","bleed":true,"horizontalAlignment":"Center","selectAction":{"type":"Action.OpenUrl"},"columns":[{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"Discord","iconUrl":"https://i.gyazo.com/c629f37bb1aeed2c1bc1768fdc93bc1a.gif","url":"https://discord.gg","style":"positive"}]}]},{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.Submit","title":"Play","style":"positive","iconUrl":"https://i.gyazo.com/c629f37bb1aeed2c1bc1768fdc93bc1a.gif","id":"played"}]}]},{"type":"Column","width":"stretch","items":[{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"Website","style":"positive","url":"https://badger.store","iconUrl":"https://i.gyazo.com/c629f37bb1aeed2c1bc1768fdc93bc1a.gif"}]}]}]},{"type":"ActionSet","actions":[{"type":"Action.OpenUrl","title":"DiscordAcePerms created by Badger","style":"destructive","iconUrl":"https://i.gyazo.com/c629f37bb1aeed2c1bc1768fdc93bc1a.gif","url":"https://discord.com/invite/WjB5VFz"}]}],"style":"default","bleed":true,"height":"stretch","isVisible":true}]}]==]
