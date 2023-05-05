@@ -141,7 +141,7 @@ function RegisterPermissions(src, eventLocation)
 	end
 	if (identifierDiscord) then
 		sendDbug("Player " .. GetPlayerName(src) .. " had their Discord identifier found...", eventLocation);
-		exports['Badger_Discord_API']:ClearCache(discordId);
+		exports['Badger_Discord_API']:ClearCache(discord);
 		PermTracker[discord] = nil;
 		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
 		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
