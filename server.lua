@@ -130,43 +130,54 @@ function sendDbug(msg, eventLocation)
 	end 
 end
 
+ROLE_CACHE = {};
+function convertRolesToMap(roleIds)
+	roleMap = {};
+	for i = 1, #roleIds do 
+		roleMap[tostring(roleIds[i])] = true;
+	end
+	return roleMap;
+end
+
 function RegisterPermissions(src, eventLocation)
-	local identifierDiscord = "";
 	local license = ExtractIdentifiers(src).license;
 	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
-	for k, v in ipairs(GetPlayerIdentifiers(src)) do
-		if string.sub(v, 1, string.len("discord:")) == "discord:" then
-			identifierDiscord = v
-		end
-	end
-	if (identifierDiscord) then
+	if (discord) then
 		sendDbug("Player " .. GetPlayerName(src) .. " had their Discord identifier found...", eventLocation);
 		exports['Badger_Discord_API']:ClearCache(discord);
 		PermTracker[discord] = nil;
 		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
-		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
+		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src);
 		if not (roleIDs == false) then
+			local ROLE_MAP = convertRolesToMap(roleIDs);
 			sendDbug("Player " .. GetPlayerName(src) .. " had a valid roleIDs... Length: " .. tostring(#roleIDs), eventLocation);
 			for i = 1, #roleList do
-				for j = 1, #roleIDs do
-					sendDbug("Checking to add permission: " .. roleList[i][2] .. " => Player " .. GetPlayerName(src) .. " has role " .. roleIDs[j] .. " and it was compared against " .. roleList[i][1], eventLocation);
-					if exports.Badger_Discord_API:CheckEqual(roleList[i][1], roleIDs[j]) then
-						if (Config.Print_Perm_Grants_And_Removals) then 
-							print("[DiscordAcePerms] (" .. eventLocation .. ") Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
-						end
-						ExecuteCommand(permAdd .. roleList[i][2])
-						-- Track the permission node given: 
-						if PermTracker[discord] ~= nil then 
-							-- Has them, we add to list 
-							local list = PermTracker[discord];
-							table.insert(list, roleList[i][2]);
-							PermTracker[discord] = list;
-						else 
-							-- Doesn't have them, give them a list 
-							local list = {};
-							table.insert(list, roleList[i][2]);
-							PermTracker[discord] = list;
-						end
+				local discordRoleId = nil;
+				if (ROLE_CACHE[roleList[i][1]] ~= nil) then 
+					discordRoleId = ROLE_CACHE[roleList[i][1]];
+				else
+					discordRoleId = exports.Badger_Discord_API:FetchRoleID(roleList[i][1]);
+					if (discordRoleId ~= nil) then 
+						ROLE_CACHE[roleList[i][1]] = discordRoleId; 
+					end 
+				end
+				sendDbug("Checking to add permission: " .. roleList[i][2] .. " => Player " .. GetPlayerName(src) .. " has role " .. tostring(discordRoleId) .. " and it was compared against " .. roleList[i][1], eventLocation);
+				if ROLE_MAP[tostring(discordRoleId)] ~= nil then
+					if (Config.Print_Perm_Grants_And_Removals) then 
+						print("[DiscordAcePerms] (" .. eventLocation .. ") Added " .. GetPlayerName(src) .. " to role group " .. roleList[i][2]);
+					end
+					ExecuteCommand(permAdd .. roleList[i][2])
+					-- Track the permission node given: 
+					if PermTracker[discord] ~= nil then 
+						-- Has them, we add to list 
+						local list = PermTracker[discord];
+						table.insert(list, roleList[i][2]);
+						PermTracker[discord] = list;
+					else 
+						-- Doesn't have them, give them a list 
+						local list = {};
+						table.insert(list, roleList[i][2]);
+						PermTracker[discord] = list;
 					end
 				end
 			end
@@ -186,17 +197,11 @@ end
 
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 	deferrals.defer();
-	local src = source; 
-	local identifierDiscord = "";
+	local src = source;
 	local license = ExtractIdentifiers(src).license;
 	local discord = ExtractIdentifiers(src).discord:gsub("discord:", "");
-		for k, v in ipairs(GetPlayerIdentifiers(src)) do
-				if string.sub(v, 1, string.len("discord:")) == "discord:" then
-					identifierDiscord = v
-				end
-		end
 		local permAdd = "add_principal identifier.discord:" .. discord .. " ";
-		if identifierDiscord then
+		if discord then
 			if (not RegisterPermissions(src, 'playerConnecting')) then
 				if InDiscordDetector[license] == nil then 
 					-- Notify them they are not in the Discord 
