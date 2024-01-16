@@ -3,7 +3,7 @@
 -----------------------------------
 
 fx_version 'cerulean'
-game 'gta5'
+game 'common'
 
 server_script "versionChecker.lua"
 server_script "config.lua"
